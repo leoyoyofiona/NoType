@@ -162,7 +162,7 @@ Grant permissions to the installed app in `Applications`, not to temporary build
 
 ### Download
 
-- Releases page: [https://github.com/leoyoyofiona/NoTpye/releases](https://github.com/leoyoyofiona/NoTpye/releases)
+- Releases page: [https://github.com/leoyoyofiona/NoType/releases](https://github.com/leoyoyofiona/NoType/releases)
 - Recommended asset: `NoType.dmg`
 - Alternate installer: `NoType-Installer.pkg`
 
