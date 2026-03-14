@@ -17,7 +17,12 @@ It goes further after you finish:
 
 ---
 
-## 中文介绍
+## Introduction
+
+<details>
+<summary><strong>中文介绍</strong></summary>
+
+<br />
 
 NoType 不是“又一个语音输入工具”。
 
@@ -42,23 +47,6 @@ NoType 不是“又一个语音输入工具”。
 - 想要中英双语输入和互译的人
 - 不想长期订阅 Typeless、TypeOff 这类收费工具的人
 
-### 核心卖点
-
-- `macOS 原生感`
-  尽量复用系统能力，响应快，体验像系统自带程序。
-
-- `边说边出字`
-  输入过程强调实时反馈，不是录完再慢慢转文字。
-
-- `自动整理语句`
-  说话里的“那个、嗯、然后、呃”等口语赘词，会在结束后尽量整理成更自然的句子。
-
-- `中英双语 + 中英互译`
-  既能直接中文输入、直接英文输入，也能中文说完直接变英文、英文说完直接变中文。
-
-- `轻量、免费、离线优先`
-  没有复杂臃肿的界面，不靠重型云端工作流，日常使用更接近一个原生菜单栏工具。
-
 ### 为什么比纯系统听写更有价值
 
 macOS 自带听写已经很好用，但它主要解决的是“把你说的话打出来”。
@@ -82,9 +70,12 @@ NoType 的定位不是做一个复杂的 AI 写作平台，而是做一个更像
 
 如果你要的是“打开就说、马上出字、结束自动整理、还能翻译”，NoType 的方向会比重型订阅工具更克制，也更高频。
 
----
+</details>
 
-## English
+<details>
+<summary><strong>English</strong></summary>
+
+<br />
 
 NoType is a native-feeling macOS voice input app for users who want more than plain dictation.
 
@@ -133,6 +124,8 @@ Compared with paid AI dictation tools such as Typeless or TypeOff, NoType is int
 
 ---
 
+</details>
+
 ## Mode Flow
 
 Default hotkey:
@@ -166,6 +159,12 @@ On first launch, macOS may ask for:
 - Automation
 
 Grant permissions to the installed app in `Applications`, not to temporary build copies.
+
+### Download
+
+- Releases page: [https://github.com/leoyoyofiona/NoTpye/releases](https://github.com/leoyoyofiona/NoTpye/releases)
+- Recommended asset: `NoType.dmg`
+- Alternate installer: `NoType-Installer.pkg`
 
 ---
 
