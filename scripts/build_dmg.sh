@@ -12,12 +12,12 @@ DMG_PATH="$DIST_DIR/NoType.dmg"
 ICON_PATH="$ROOT_DIR/Sources/notype/Resources/AppIcon.icns"
 KEYCHAIN="$HOME/Library/Keychains/notype-dev.keychain-db"
 SIGNING_SCRIPT="$ROOT_DIR/scripts/setup_dev_signing.sh"
+SIGNING_MODE="${NOTYPE_SIGNING_MODE:-adhoc}"
 
 rm -rf "$APP_BUNDLE_DIR" "$DMG_ROOT" "$DMG_PATH"
 mkdir -p "$DIST_DIR" "$APP_BUNDLE_DIR/Contents/MacOS" "$APP_BUNDLE_DIR/Contents/Resources" "$DMG_ROOT"
 
 swift build -c release --package-path "$ROOT_DIR"
-"$SIGNING_SCRIPT" >/dev/null
 
 cp "$BUILD_DIR/release/NoType" "$APP_BUNDLE_DIR/Contents/MacOS/NoType"
 cp "$ROOT_DIR/Sources/notype/Resources/Info.plist" "$APP_BUNDLE_DIR/Contents/Info.plist"
@@ -25,17 +25,22 @@ if [[ -f "$ICON_PATH" ]]; then
     cp "$ICON_PATH" "$APP_BUNDLE_DIR/Contents/Resources/AppIcon.icns"
 fi
 
-IDENTITY_HASH="$(
-    security find-identity -v -p codesigning "$KEYCHAIN" |
-    awk '/NoType Dev/ {print $2; exit}'
-)"
+if [[ "$SIGNING_MODE" == "dev" ]]; then
+    "$SIGNING_SCRIPT" >/dev/null
+    IDENTITY_HASH="$(
+        security find-identity -v -p codesigning "$KEYCHAIN" |
+        awk '/NoType Dev/ {print $2; exit}'
+    )"
 
-if [[ -z "$IDENTITY_HASH" ]]; then
-    echo "NoType Dev signing identity not found in $KEYCHAIN" >&2
-    exit 1
+    if [[ -z "$IDENTITY_HASH" ]]; then
+        echo "NoType Dev signing identity not found in $KEYCHAIN" >&2
+        exit 1
+    fi
+
+    codesign --force --deep --keychain "$KEYCHAIN" --sign "$IDENTITY_HASH" "$APP_BUNDLE_DIR" >/dev/null
+else
+    codesign --force --deep --sign - "$APP_BUNDLE_DIR" >/dev/null
 fi
-
-codesign --force --deep --keychain "$KEYCHAIN" --sign "$IDENTITY_HASH" "$APP_BUNDLE_DIR" >/dev/null
 
 cp -R "$APP_BUNDLE_DIR" "$DMG_ROOT/"
 ln -s /Applications "$DMG_ROOT/Applications"
@@ -48,3 +53,8 @@ hdiutil create \
     "$DMG_PATH" >/dev/null
 
 echo "Built dmg: $DMG_PATH"
+if [[ "$SIGNING_MODE" == "dev" ]]; then
+    echo "Signing: local NoType Dev identity"
+else
+    echo "Signing: ad-hoc (default, avoids local keychain prompts)"
+fi

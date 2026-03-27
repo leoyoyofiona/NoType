@@ -4,6 +4,8 @@ import SwiftUI
 
 @MainActor
 final class AppModel: ObservableObject {
+    private static let hotKeyDefaultsKey = "NoTypeHotKeyConfiguration"
+
     @Published private(set) var phase: CapturePhase = .idle
     @Published private(set) var mode: InputMode = .directChinese
     @Published private(set) var previewText = "准备就绪"
@@ -12,6 +14,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var accessibilityGranted = false
     @Published private(set) var microphoneGranted = false
     @Published private(set) var speechGranted = false
+    @Published private(set) var hotKeyConfiguration = HotKeyConfiguration.defaultValue
 
     let translationController = TranslationController()
 
@@ -39,6 +42,7 @@ final class AppModel: ObservableObject {
     init() {
         DebugLogger.reset()
         DebugLogger.log("AppModel init")
+        hotKeyConfiguration = Self.loadHotKeyConfiguration()
         refreshPermissions()
         installHotKeys()
         prewarmSpeechAssets()
@@ -63,13 +67,17 @@ final class AppModel: ObservableObject {
         "\(phaseTitle) · \(mode.shortLabel)"
     }
 
+    var hotKeyDisplayString: String {
+        hotKeyConfiguration.displayString
+    }
+
     var menuHint: String {
         switch phase {
         case .idle:
             if mode.usesSystemDictation {
-                return "按 Control + Option + Space 触发系统听写；后续版本会在结束后自动整理语句。"
+                return "按 \(hotKeyConfiguration.displayString) 触发系统听写；结束后会自动整理语句。"
             }
-            return "按 Control + Option + Space 开始翻译听写。"
+            return "按 \(hotKeyConfiguration.displayString) 开始翻译听写。"
         case .preparing:
             return "正在准备翻译听写资源，首次启动可能需要几秒。"
         case .listening:
@@ -149,6 +157,43 @@ final class AppModel: ObservableObject {
     func quitApplication() {
         DebugLogger.log("quit application requested")
         NSApp.terminate(nil)
+    }
+
+    func updateHotKeyKey(_ key: HotKeyKey) {
+        guard hotKeyConfiguration.key != key else { return }
+        hotKeyConfiguration.key = key
+        persistHotKeyConfiguration()
+        installHotKeys()
+        previewText = "全局热键已更新为 \(hotKeyConfiguration.displayString)"
+        DebugLogger.log("hotkey key updated -> \(hotKeyConfiguration.displayString)")
+    }
+
+    func isHotKeyModifierEnabled(_ modifier: HotKeyModifier) -> Bool {
+        hotKeyConfiguration.contains(modifier)
+    }
+
+    func toggleHotKeyModifier(_ modifier: HotKeyModifier) {
+        var nextConfiguration = hotKeyConfiguration
+        nextConfiguration.setModifier(modifier, enabled: !nextConfiguration.contains(modifier))
+
+        guard nextConfiguration.hasAnyModifier else {
+            previewText = "全局热键至少保留一个修饰键。"
+            return
+        }
+
+        hotKeyConfiguration = nextConfiguration
+        persistHotKeyConfiguration()
+        installHotKeys()
+        previewText = "全局热键已更新为 \(hotKeyConfiguration.displayString)"
+        DebugLogger.log("hotkey modifiers updated -> \(hotKeyConfiguration.displayString)")
+    }
+
+    func resetHotKeyConfiguration() {
+        hotKeyConfiguration = .defaultValue
+        persistHotKeyConfiguration()
+        installHotKeys()
+        previewText = "全局热键已恢复默认：\(hotKeyConfiguration.displayString)"
+        DebugLogger.log("hotkey reset -> \(hotKeyConfiguration.displayString)")
     }
 
     func toggleCapture() {
@@ -264,16 +309,32 @@ final class AppModel: ObservableObject {
     }
 
     private func installHotKeys() {
+        hotKeys.unregisterAll()
         hotKeys.register(
             id: 1,
-            keyCode: UInt32(kVK_Space),
-            modifiers: UInt32(controlKey | optionKey)
+            keyCode: hotKeyConfiguration.key.carbonKeyCode,
+            modifiers: hotKeyConfiguration.carbonModifiers
         ) { [weak self] in
             DebugLogger.log("hotkey pressed capture")
             Task { @MainActor in
                 self?.toggleCapture()
             }
         }
+    }
+
+    private func persistHotKeyConfiguration() {
+        guard let encoded = try? JSONEncoder().encode(hotKeyConfiguration) else { return }
+        UserDefaults.standard.set(encoded, forKey: Self.hotKeyDefaultsKey)
+    }
+
+    private static func loadHotKeyConfiguration() -> HotKeyConfiguration {
+        guard let encoded = UserDefaults.standard.data(forKey: hotKeyDefaultsKey),
+              let configuration = try? JSONDecoder().decode(HotKeyConfiguration.self, from: encoded),
+              configuration.hasAnyModifier else {
+            return .defaultValue
+        }
+
+        return configuration
     }
 
     private func startCapture() async {

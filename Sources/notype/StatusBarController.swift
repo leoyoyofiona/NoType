@@ -50,7 +50,7 @@ final class StatusBarController {
     private func configurePopover() {
         popover.behavior = .transient
         popover.animates = true
-        popover.contentSize = NSSize(width: 360, height: 420)
+        popover.contentSize = NSSize(width: 380, height: 560)
         popover.contentViewController = NSHostingController(
             rootView: MenuBarContentView(model: model)
         )
@@ -83,7 +83,7 @@ final class StatusBarController {
         }
 
         button.title = "\(indicator) \(model.mode.shortLabel)"
-        button.toolTip = "NoType - \(model.statusSummary)"
+        button.toolTip = "NoType - \(model.statusSummary) - \(model.hotKeyDisplayString)"
     }
 
     @objc

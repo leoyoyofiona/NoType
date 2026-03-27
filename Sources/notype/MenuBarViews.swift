@@ -35,14 +35,18 @@ struct MenuBarContentView: View {
     @ObservedObject var model: AppModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            header
-            previewCard
-            modeSection
-            permissionSection
-            footer
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                header
+                previewCard
+                shortcutSection
+                modeSection
+                permissionSection
+                footer
+            }
+            .padding(16)
         }
-        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var header: some View {
@@ -80,17 +84,16 @@ struct MenuBarContentView: View {
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.secondary)
 
+            Text("完成一次输入后会自动轮转到下一个模式。")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+
             ForEach(InputMode.allCases, id: \.self) { mode in
                 Button {
                     model.setMode(mode)
                 } label: {
                     HStack(alignment: .firstTextBaseline) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(mode.displayName)
-                            Text(mode.hotKeyHint)
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.secondary)
-                        }
+                        Text(mode.displayName)
                         Spacer()
                         if mode == model.mode {
                             Image(systemName: "checkmark.circle.fill")
@@ -100,6 +103,64 @@ struct MenuBarContentView: View {
                 .buttonStyle(.borderless)
                 .contentShape(Rectangle())
             }
+        }
+    }
+
+    private var shortcutSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("全局热键")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            Text("当前：\(model.hotKeyDisplayString)")
+                .font(.system(size: 13, weight: .medium))
+
+            Text("有些键盘没有 Option 键，也可以改成 Command / Shift / Control 组合。")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 8) {
+                ForEach(HotKeyModifier.allCases) { modifier in
+                    Button {
+                        model.toggleHotKeyModifier(modifier)
+                    } label: {
+                        Text(modifier.displayName)
+                            .font(.system(size: 11, weight: .semibold))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule(style: .continuous)
+                                    .fill(model.isHotKeyModifierEnabled(modifier) ? Color.accentColor : Color(NSColor.controlBackgroundColor))
+                            )
+                            .foregroundStyle(model.isHotKeyModifierEnabled(modifier) ? .white : .primary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            HStack {
+                Text("主键")
+                    .font(.system(size: 12, weight: .medium))
+                Spacer()
+                Picker(
+                    "主键",
+                    selection: Binding(
+                        get: { model.hotKeyConfiguration.key },
+                        set: { model.updateHotKeyKey($0) }
+                    )
+                ) {
+                    ForEach(HotKeyKey.allCases) { key in
+                        Text(key.displayName).tag(key)
+                    }
+                }
+                .pickerStyle(.menu)
+                .frame(width: 120)
+            }
+
+            Button("恢复默认热键") {
+                model.resetHotKeyConfiguration()
+            }
+            .buttonStyle(.borderless)
         }
     }
 
@@ -127,7 +188,6 @@ struct MenuBarContentView: View {
                 Button(model.phase == .listening ? "结束听写" : "开始听写") {
                     model.toggleCapture()
                 }
-                .keyboardShortcut(.space, modifiers: [.control, .option])
             }
 
             HStack {
@@ -138,7 +198,11 @@ struct MenuBarContentView: View {
                 .keyboardShortcut("q", modifiers: [.command])
             }
 
-            Text("开始/结束：Control + Option + Space")
+            Text("开始/结束：\(model.hotKeyDisplayString)")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+
+            Text("默认热键是 Control + Option + Space，现在支持自定义。")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
 

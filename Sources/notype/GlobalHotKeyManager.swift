@@ -11,16 +11,27 @@ final class GlobalHotKeyManager {
     }
 
     deinit {
-        for hotKeyRef in hotKeyRefs.values {
-            UnregisterEventHotKey(hotKeyRef)
-        }
+        unregisterAll()
 
         if let eventHandlerRef {
             RemoveEventHandler(eventHandlerRef)
         }
     }
 
+    func unregisterAll() {
+        for hotKeyRef in hotKeyRefs.values {
+            UnregisterEventHotKey(hotKeyRef)
+        }
+        hotKeyRefs.removeAll()
+        handlers.removeAll()
+    }
+
     func register(id: UInt32, keyCode: UInt32, modifiers: UInt32, handler: @escaping () -> Void) {
+        if let existingRef = hotKeyRefs[id] {
+            UnregisterEventHotKey(existingRef)
+            hotKeyRefs.removeValue(forKey: id)
+        }
+
         handlers[id] = handler
 
         let hotKeyID = EventHotKeyID(signature: fourCharCode("NTYP"), id: id)

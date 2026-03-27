@@ -33,6 +33,7 @@ NoType 不是“又一个语音输入工具”。
 - 识别和输入过程尽量原生
 - 说完以后自动把口语整理成通顺句子
 - 一键切换中文、英文、中转英、英转中
+- 支持自定义全局热键
 - 菜单栏常驻，随时可用
 - 尽量离线工作
 - 免费使用
@@ -105,6 +106,7 @@ NoType is built around a better end-to-end workflow:
 - Sentence cleanup after dictation
 - Native macOS menu bar app
 - Fast hotkey-driven workflow
+- Customizable global hotkey
 - Offline-first experience
 - Free to use
 
@@ -128,11 +130,15 @@ Compared with paid AI dictation tools such as Typeless or TypeOff, NoType is int
 
 ## Mode Flow
 
-Default hotkey:
+Default hotkey (customizable):
 
 ```text
 Control + Option + Space
 ```
+
+如果你的键盘没有 Option 键，或者你习惯别的组合键，可以直接在菜单栏应用里改成自定义热键。
+
+You can change the global hotkey inside the menu bar app if your keyboard does not have an Option key or you prefer another modifier combination.
 
 Mode rotation:
 
